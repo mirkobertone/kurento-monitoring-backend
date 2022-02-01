@@ -1,6 +1,9 @@
 import express, { Request, Response } from "express";
+import { Server } from "socket.io";
 import Route from "./interfaces/routes.interface";
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "./interfaces/socketio.interface";
 import errorMiddleware from "./middlewares/error.middleware";
+
 
 class App {
 	public app: express.Application;
@@ -16,6 +19,7 @@ class App {
 		this.initializeMiddlewares();
 		this.initializeRoutes(routes);
 		this.initializeErrorHandling();
+		this.initializeIO();
 	}
 
 	public listen() {
@@ -57,6 +61,16 @@ class App {
 
 	private initializeErrorHandling() {
 		this.app.use(errorMiddleware);
+	}
+
+	private initializeIO() {
+		const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>();
+		io.on('connection', socket => {
+			//Stablish kms connections
+			socket.on("disconnect", reason => {
+				// Release kurento connections
+			})
+	});
 	}
 }
 
