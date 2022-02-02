@@ -1,10 +1,8 @@
 import App from "./app";
-import IndexRoute from "./routes/index.route";
-import KmsRoute from "./routes/kms.route";
+import KurentoRoute from "./routes/kurento.route";
 
 const app = new App([
-	new KmsRoute(),
-	new IndexRoute()
+	new KurentoRoute(),
 ]);
 
 app.listen();

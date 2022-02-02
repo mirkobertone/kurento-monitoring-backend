@@ -3,7 +3,7 @@ import MonitorController from "../controllers/monitor.controller";
 
 import Route from "../interfaces/routes.interface";
 
-export default class KmsRoute implements Route {
+export default class KurentoRoute implements Route {
 	public path = "/";
 	public router = Router();
 

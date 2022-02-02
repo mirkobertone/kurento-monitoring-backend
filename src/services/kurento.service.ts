@@ -1,7 +1,7 @@
 import KurentoClient from "kurento-client";
 
 
-class KurentoController {
+class KurentoService {
 
 	public async connect(url = "ws://0.0.0.0:8888/kurento") {
     try {
@@ -10,7 +10,6 @@ class KurentoController {
       console.log("Connected to KMS", url);
       return client;
     } catch (error) {
-      console.log("Can't connect to KMS", error);
       throw error;
     }
   }
@@ -20,6 +19,6 @@ class KurentoController {
   }
 };
 
-export default new KurentoController();
+export default new KurentoService();
 
 
