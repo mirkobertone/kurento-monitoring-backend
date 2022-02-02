@@ -1,15 +1,17 @@
+import { Socket } from "socket.io";
+
 export interface ServerToClientEvents {
-  noArg: () => void;
-  basicEmit: (a: number, b: string, c: Buffer) => void;
-  withAck: (d: string, callback: (e: number) => void) => void;
+  
+  "app:error": (error: any) => void;
+  "monitor:pipelines": (pipelines: any) => void;
+  "monitor:serverInfo": (serverinfo: any) => void;
 }
 export interface ClientToServerEvents {
-  hello: () => void;
+  "monitor:start": (data: any) => Promise<void>;
 }
 export interface InterServerEvents {
   ping: () => void;
 }
 export interface SocketData {
-  name: string;
-  age: number;
+  url: string;
 }
