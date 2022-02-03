@@ -4,13 +4,27 @@ import MonitorController from "./monitor.controller";
 
 class IOController {
 	public port: number;
-  constructor() {
-    this.port = Number(process.env.IO_PORT || 3001);
-  }
-  init() {
-    const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>();
+  
+  init(server) {
+    const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
+      cors: {
+        // Configures the Access-Control-Allow-Origin CORS header.
+          origin: "*",
+          // Configures the Access-Control-Allow-Methods CORS header.
+          methods: ["GET", "OPTIONS", "POST"],
+          // Configures the Access-Control-Allow-Headers CORS header.
+          allowedHeaders: [],
+          // Configures the Access-Control-Expose-Headers CORS header.
+          exposedHeaders: [],
+          // Configures the Access-Control-Allow-Credentials CORS header.
+          credentials: false
+        // Configures the Access-Control-Max-Age CORS header.
+        // maxAge: 3600
+        }
+    });
     io.on('connection', socket => {
       console.log("Socket connected", socket.id);
+      socket.emit("connect");
       
       socket.on("monitor:start", (data: SocketData) => MonitorController.start(socket, data))
       socket.on("disconnect", reason => {
@@ -19,8 +33,6 @@ class IOController {
         MonitorController.stop(socket);
       })
     });
-		console.log(`🚀 Socket.IO listening on the port ${this.port}`);
-    io.listen(this.port);
   }
 
 }

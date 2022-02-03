@@ -2,15 +2,18 @@ import express, { Request, Response } from "express";
 import IOController from "./controllers/io.controller";
 import Route from "./interfaces/routes.interface";
 import errorMiddleware from "./middlewares/error.middleware";
+import http from "http";
 
 
 class App {
 	public app: express.Application;
 	public port: string | number;
 	public env: boolean;
+	public server: http.Server;
 
 	constructor(routes: Route[]) {
 		this.app = express();
+		this.server = http.createServer(this.app);
 		this.port = process.env.PORT || 3000;
 		this.env = process.env.NODE_ENV === "production" ? true : false;
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -18,11 +21,12 @@ class App {
 		this.initializeMiddlewares();
 		this.initializeRoutes(routes);
 		this.initializeErrorHandling();
-		this.initializeIO();
+
+		IOController.init(this.server);
 	}
 
 	public listen() {
-		this.app.listen(this.port, () => {
+		this.server.listen(this.port, () => {
 			console.log(`🚀 App listening on the port ${this.port}`);
 		});
 	}
@@ -60,10 +64,6 @@ class App {
 
 	private initializeErrorHandling() {
 		this.app.use(errorMiddleware);
-	}
-
-	private initializeIO() {
-		IOController.init();
 	}
 }
 
