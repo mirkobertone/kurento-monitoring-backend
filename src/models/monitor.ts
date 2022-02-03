@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
-
 import KurentoClient from "kurento-client";
+import _ from "lodash";
+import hasher from 'node-object-hash';
 
 enum State {
   Running,
@@ -11,11 +12,13 @@ export class Monitor extends EventEmitter {
 
   private kurentoManager: KurentoClient.ServerManager;
   private state: State;
+  private prevHash: string;
 
   constructor(client: KurentoClient.ServerManager) {
     super();
     this.state = State.Running;
     this.kurentoManager = client;
+    this.prevHash = "";
   }
 
   public async start() {
@@ -30,18 +33,47 @@ export class Monitor extends EventEmitter {
     if (this.state === State.Stopped) {
       return;
     }
-    await this.getMonitoringData();
-    setTimeout(() => this.loop(), Number(process.env.MONITOR_TIMEOUT) || 2000);
+    try {
+      await this.getMonitoringData();
+      setTimeout(() => this.loop(), Number(process.env.MONITOR_TIMEOUT) || 2000); 
+    } catch (error) {
+      this.loop();
+    } finally {
+      
+    }
   }
 
 
   async getMonitoringData() {
-    const pipelines = await this.kurentoManager.getPipelines();
-    const mediaPipelinesInfo = await this.getMediaElementsInfo(pipelines);
-    this.emit('pipelines', mediaPipelinesInfo);
+    try {
+      const pipelines = await this.kurentoManager.getPipelines();
+      const mediaPipelinesInfo = await this.getMediaElementsInfo(pipelines);
+      const serverInfo = await this.getServerInfo();    
+      this.emitMonitoringData({serverInfo, pipelines: mediaPipelinesInfo});
+      
+    } catch (error) {
+      this.emit("monitor:error", error)
+    }
+  }
 
-    const serverInfo = await this.getServerInfo();    
-    this.emit('serverInfo', serverInfo);
+  emitMonitoringData(args: any) {
+    if(this.hash(args)) {
+      _.forEach(args, (value, key) => {
+        console.log("emitting", value, key);
+        
+        this.emit(`${key}`, value);
+      })
+    }
+  }
+
+  hash(hashable: any) {
+    const hashSortCoerce = hasher();
+    const hash = hashSortCoerce.hash(hashable)
+    if(hash !== this.prevHash) {
+      this.prevHash = hash;
+      return true;
+    }
+    return false;
   }
 
   async getMediaElementsInfo(mediaElements: KurentoClient.MediaObject[]) {

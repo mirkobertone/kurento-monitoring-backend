@@ -39,6 +39,7 @@ class MonitorController {
       }
       monitor.on("pipelines", pipelines  => socket.emit("monitor:pipelines", pipelines));
       monitor.on("serverInfo", serverInfo  => socket.emit("monitor:serverInfo", serverInfo));
+      monitor.on("error", error => socket.emit("app:error", error));
 
       monitor.start();
       

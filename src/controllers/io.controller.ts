@@ -24,7 +24,6 @@ class IOController {
     });
     io.on('connection', socket => {
       console.log("Socket connected", socket.id);
-      socket.emit("connect");
       
       socket.on("monitor:start", (data: SocketData) => MonitorController.start(socket, data))
       socket.on("disconnect", reason => {
