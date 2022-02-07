@@ -2,24 +2,57 @@ import { EventEmitter } from "events";
 import KurentoClient from "kurento-client";
 import _ from "lodash";
 import hasher from 'node-object-hash';
+import { Socket } from "socket.io";
+import KurentoService from "../services/kurento.service";
+
 
 enum State {
   Running,
   Stopped
 }
 
-export class Monitor extends EventEmitter {
+export class Monitor {
 
+  private url: string;
   private kurentoManager: KurentoClient.ServerManager;
+  private clients: Socket[] ;
   private state: State;
   private prevHash: string;
 
-  constructor(client: KurentoClient.ServerManager) {
-    super();
+  constructor(url: string) {
+    this.clients = [];
+    this.url = url;
     this.state = State.Running;
-    this.kurentoManager = client;
     this.prevHash = "";
   }
+
+  async init(url: string) {
+    try {
+      const connection = await KurentoService.connect(url);
+      this.kurentoManager = await connection.getServerManager();
+      this.url = url;
+    } catch (error) {
+      console.log("[ERROR_MONITORING_INIT]", error);
+      throw error;
+    }
+  }
+
+  addClient(client: Socket) {
+    this.clients.push(client)
+    this.prevHash = "";
+  }
+
+  removeClient(client: Socket) {
+    _.remove(this.clients, c => c.id === client.id)
+  }
+
+  broadcast(signal: string, data: object) {
+    _.forEach(this.clients, c => {
+      console.log("emitting", signal + data, "to", c.id);
+      c.emit(signal, data);
+    })
+  }
+
 
   public async start() {
     this.loop();
@@ -48,20 +81,22 @@ export class Monitor extends EventEmitter {
     try {
       const pipelines = await this.kurentoManager.getPipelines();
       const mediaPipelinesInfo = await this.getMediaElementsInfo(pipelines);
-      const serverInfo = await this.getServerInfo();    
+      const serverInfo = await this.getServerInfo();  
+
       this.emitMonitoringData({serverInfo, pipelines: mediaPipelinesInfo});
       
     } catch (error) {
-      this.emit("monitor:error", error)
+      this.broadcast("app:error", error.message)
+      // this.emit("monitor:error", error)
     }
   }
 
   emitMonitoringData(args: any) {
     if(this.hash(args)) {
       _.forEach(args, (value, key) => {
-        console.log("emitting", value, key);
         
-        this.emit(`${key}`, value);
+        // this.emit(`${key}`, value);
+        this.broadcast(`${key}`, value);
       })
     }
   }
@@ -107,5 +142,9 @@ export class Monitor extends EventEmitter {
       version: info.version,
       type: info.type
     };
+  }
+  
+  getClients(): number {
+    return this.clients.length;
   }
 }

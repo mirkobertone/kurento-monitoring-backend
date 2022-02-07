@@ -1,9 +1,14 @@
 import { Server } from "socket.io";
 import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../interfaces/socketio.interface";
+import { Monitor } from "../models/monitor";
 import MonitorController from "./monitor.controller";
+import KurentoService from "../services/kurento.service";
+import _ from "lodash";
 
 class IOController {
-	public port: number;
+
+  private socket_urls: { [socket_id: string]: string[]} = {};
+
   
   init(server) {
     const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server, {
@@ -24,16 +29,40 @@ class IOController {
     });
     io.on('connection', socket => {
       console.log("Socket connected", socket.id);
+      this.socket_urls[socket.id] = [];
       
-      socket.on("monitor:start", (data: SocketData) => MonitorController.start(socket, data))
+      socket.on("monitor:start", (data: SocketData) => {
+        console.log("[START_SIGNAL]");
+        
+        const { url } = data;
+        if (!url) {
+          socket.emit("app:error", "Error parameter - url is not defined");
+          return;
+        }
+        MonitorController.start(socket, url)
+        this.socket_urls[socket.id].push(data.url);
+      });
+    
+      socket.on("monitor:stop", (data: SocketData) => {
+        const { url } = data;
+        if (!url) {
+          socket.emit("app:error", "Error parameter - url is not defined");
+          return;
+        }
+        MonitorController.stop(socket, url);
+        _.remove(this.socket_urls[socket.id], s => s === url )
+      });
+
       socket.on("disconnect", reason => {
         // Release kurento connections
         console.log("Socket disconnected", socket.id);
-        MonitorController.stop(socket);
+        _.forEach(this.socket_urls[socket.id], url => {
+          MonitorController.stop(socket, url);
+          delete this.socket_urls[socket.id];
+        })
       })
     });
   }
-
 }
 
 export default new IOController();

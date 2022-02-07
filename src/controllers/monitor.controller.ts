@@ -4,56 +4,53 @@ import { NextFunction, Request, Response } from "express";
 import { Socket } from "socket.io";
 import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../interfaces/socketio.interface";
 import { ServerManager } from "kurento-client";
+import _ from "lodash";
 
 
 class MonitorController {
 
-  private monitors: {
-    [socket_id: string]: {
-      monitor: Monitor,
-      kurentoManager: ServerManager;
-    }
-  }
+  private monitors: { [url: string]: Monitor}
+ 
   constructor() {
     this.monitors = {};
   }
   public connectApi = (req: Request, res: Response, next: NextFunction) => {
 		try {
-      // this.start({}, {});
 			res.sendStatus(200);
 		} catch (error) {
 			next(error);
 		}
 	};
   
-  public async start(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>, data: SocketData) {
-    const {url} = data;
-    console.log("Socket want to connect to kurento server", url);
-    try {
-      const connection = await KurentoService.connect(url);
-      const kurentoManager = await connection.getServerManager();
-      const monitor = new Monitor(kurentoManager);
-      this.monitors[socket.id] = {
-        monitor,
-        kurentoManager
-      }
-      monitor.on("pipelines", pipelines  => socket.emit("monitor:pipelines", pipelines));
-      monitor.on("serverInfo", serverInfo  => socket.emit("monitor:serverInfo", serverInfo));
-      monitor.on("error", error => socket.emit("app:error", error));
 
-      monitor.start();
+  public async start(socket: Socket < ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData > , url: string) {
+    if (_.isNil(this.monitors[url])) {
+      console.log("[NEW_MONITOR]");
       
-    } catch (error) {
-      console.log("Catch error", error);
-      socket.emit("app:error", error.message)
+      const monitor = new Monitor(url);
+      try {
+        await monitor.init(url);
+        this.monitors[url] = monitor;
+      } catch (error) {
+        console.log("[ERROR_MONITOR_CONTROLLER]", error);
+        socket.emit("app:error", error.message);
+      }
     }
+    this.monitors[url].addClient(socket);
+    this.monitors[url].start();
+    console.log("[START_MONITOR]", _.keys(this.monitors));
   }
 
-  public stop(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
-    if(this.monitors[socket.id]){
+  public stop(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>, url: string) {
+    const monitor = this.monitors[url]; 
+    if(monitor){
       console.log("Stopping monitor for", socket.id, "Releasing resources");
-      this.monitors[socket.id].monitor.stop();
-      delete this.monitors[socket.id];
+      monitor.removeClient(socket);
+      if(monitor.getClients() === 0) {
+        monitor.stop();
+        console.log("STOP MONITOR");
+        delete this.monitors[url];
+      }
     }
   }
 }

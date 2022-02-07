@@ -8,7 +8,8 @@ export interface ServerToClientEvents {
   "connect": () => void;
 }
 export interface ClientToServerEvents {
-  "monitor:start": (data: any) => Promise<void>;
+  "monitor:start": (data: any) => void;
+  "monitor:stop": (data: any) => void;
 }
 export interface InterServerEvents {
   ping: () => void;
