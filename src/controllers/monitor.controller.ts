@@ -2,7 +2,7 @@ import { Monitor } from "../models/monitor";
 import KurentoService from "../services/kurento.service";
 import { NextFunction, Request, Response } from "express";
 import { Socket } from "socket.io";
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../interfaces/socketio.interface";
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, SocketDataRelease } from "../interfaces/socketio.interface";
 import { ServerManager } from "kurento-client";
 import _ from "lodash";
 
@@ -50,6 +50,17 @@ class MonitorController {
         monitor.stop();
         console.log("STOP MONITOR");
         delete this.monitors[url];
+      }
+    }
+  }
+
+  public async release(socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketDataRelease>, url: string, ids: string[]) {
+    const monitor = this.monitors[url]; 
+    if(monitor){
+      try {
+        await monitor.releaseMediaElement(ids);
+      } catch (error) {
+        console.log("[ERROR_RELEASE_ELEMENTS]", error);
       }
     }
   }

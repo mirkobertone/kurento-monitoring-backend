@@ -13,6 +13,7 @@ enum State {
 export class Monitor {
 
   private url: string;
+  private kurentoClient: KurentoClient.ClientInstance;
   private kurentoManager: KurentoClient.ServerManager;
   private clients: Socket[] ;
   private state: State;
@@ -30,6 +31,7 @@ export class Monitor {
       const connection = await KurentoService.connect(url);
       this.kurentoManager = await connection.getServerManager();
       this.url = url;
+      this.kurentoClient = connection;
     } catch (error) {
       console.log("[ERROR_MONITORING_INIT]", error);
       throw error;
@@ -140,6 +142,21 @@ export class Monitor {
       });
     }
     return result;
+  }
+
+  async releaseMediaElement(elements_ids: string[]) {
+    console.log(elements_ids); 
+    _.forEach(elements_ids, async id => {
+      const element = await this.kurentoClient.getMediaobjectById(id)
+      console.log(element);
+      if(element) {
+        try {
+          await element.release();
+        } catch (error) {
+          throw error;
+        }
+      }
+    })
   }
 
   async getServerInfo() {

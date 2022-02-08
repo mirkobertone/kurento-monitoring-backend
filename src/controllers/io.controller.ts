@@ -1,5 +1,5 @@
 import { Server } from "socket.io";
-import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from "../interfaces/socketio.interface";
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, SocketDataRelease } from "../interfaces/socketio.interface";
 import { Monitor } from "../models/monitor";
 import MonitorController from "./monitor.controller";
 import KurentoService from "../services/kurento.service";
@@ -52,6 +52,16 @@ class IOController {
         MonitorController.stop(socket, url);
         _.remove(this.socket_urls[socket.id], s => s === url )
       });
+
+      socket.on("kurento:release", (data: SocketDataRelease) => {
+        console.log("kurento:release received", data);
+        const ids = { data };
+        const url = { data };
+        if(!ids || !url) {
+          socket.emit("app:error", "Error parameter - ids or url are not defined");
+        }
+        MonitorController.release(socket, data.url, data.ids)
+      })
 
       socket.on("disconnect", reason => {
         // Release kurento connections

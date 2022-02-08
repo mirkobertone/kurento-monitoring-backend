@@ -10,10 +10,16 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
   "monitor:start": (data: any) => void;
   "monitor:stop": (data: any) => void;
+  "kurento:release": (data: SocketDataRelease) => void;
 }
 export interface InterServerEvents {
   ping: () => void;
 }
 export interface SocketData {
   url: string;
+}
+
+export interface SocketDataRelease {
+  url: string,
+  ids: string[];
 }
