@@ -5,7 +5,6 @@ import hasher from 'node-object-hash';
 import { Socket } from "socket.io";
 import KurentoService from "../services/kurento.service";
 
-
 enum State {
   Running,
   Stopped
@@ -83,7 +82,16 @@ export class Monitor {
       const mediaPipelinesInfo = await this.getMediaElementsInfo(pipelines);
       const serverInfo = await this.getServerInfo();  
 
-      this.emitMonitoringData({serverInfo, pipelines: mediaPipelinesInfo});
+      this.emitMonitoringData({ 
+        serverInfo: {
+          url: this.url,
+          serverInfo
+        }, 
+        pipelines: {
+          url: this.url,
+          pipelines: mediaPipelinesInfo
+        }
+      });
       
     } catch (error) {
       this.broadcast("app:error", error.message)

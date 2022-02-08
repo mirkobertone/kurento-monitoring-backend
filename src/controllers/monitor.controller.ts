@@ -31,13 +31,13 @@ class MonitorController {
       try {
         await monitor.init(url);
         this.monitors[url] = monitor;
+        this.monitors[url].start();
       } catch (error) {
         console.log("[ERROR_MONITOR_CONTROLLER]", error);
         socket.emit("app:error", error.message);
       }
     }
     this.monitors[url].addClient(socket);
-    this.monitors[url].start();
     console.log("[START_MONITOR]", _.keys(this.monitors));
   }
 
