@@ -129,13 +129,13 @@ export class Monitor {
       const name = await mediaElement.getName();
       const creationTime = await mediaElement.getCreationTime();
       const type = mediaElement.constructor.name;
-      let childrens = await mediaElement.getChildren();
-      if (childrens.length) {
-        childrens = await this.getMediaElementsInfo(childrens);
+      let children = await mediaElement.getChildren();
+      if (children.length) {
+        children = await this.getMediaElementsInfo(children);
       }
       result.push({
         name,
-        childrens,
+        children,
         type,
         creationTime,
         // leaked: time.isTimeBeforeNow(creationTime * 1000, LEAK_TIMEOUT),
