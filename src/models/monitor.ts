@@ -129,6 +129,8 @@ export class Monitor {
       const name = await mediaElement.getName();
       const creationTime = await mediaElement.getCreationTime();
       const type = mediaElement.constructor.name;
+      const tags = await mediaElement.getTags();
+      
       let children = await mediaElement.getChildren();
       if (children.length) {
         children = await this.getMediaElementsInfo(children);
@@ -139,7 +141,13 @@ export class Monitor {
         type,
         creationTime,
         // leaked: time.isTimeBeforeNow(creationTime * 1000, LEAK_TIMEOUT),
-        id: mediaElement.id
+        id: mediaElement.id,
+        tags: _.map(tags, t => {
+          return {
+            key: t.key,
+            value: t.value
+          }
+        })
       });
     }
     return result;
