@@ -4,6 +4,7 @@ import _ from "lodash";
 import hasher from 'node-object-hash';
 import { Socket } from "socket.io";
 import KurentoService from "../services/kurento.service";
+import util from "util";
 
 enum State {
   Running,
@@ -49,7 +50,7 @@ export class Monitor {
 
   broadcast(signal: string, data: object) {
     _.forEach(this.clients, c => {
-      console.log("emitting", signal + data, "to", c.id);
+      console.log("emitting", signal + JSON.stringify(data), "to", c.id);
       c.emit(signal, data);
     })
   }
@@ -162,7 +163,9 @@ export class Monitor {
   async getServerInfo() {
     const info = await this.kurentoManager.getInfo();
     const usedMemory = await this.kurentoManager.getUsedMemory();
+    const usedCpu = await this.kurentoManager.getUsedCpu(2000);
     return {
+      usedCpu: Math.round(usedCpu),
       usedMemory,
       version: info.version,
       type: info.type
