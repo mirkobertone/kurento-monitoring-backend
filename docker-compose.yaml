@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  kurento-monitoring-server:
+    build:
+      context: .
+    volumes:
+      - ./src:/home/node/app/src
+      - ./nodemon.json:/home/node/app/nodemon.json
+    container_name: kurento-monitoring-server
+    expose:
+      - "3333"
+    ports:
+      - "3333:3333"
+    command: ["npm", "start"]
