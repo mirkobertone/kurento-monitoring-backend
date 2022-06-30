@@ -4,6 +4,9 @@ import Route from "./interfaces/routes.interface";
 import errorMiddleware from "./middlewares/error.middleware";
 import http from "http";
 
+process.on('uncaughtException', function (error) {
+	console.log(error);
+});
 
 class App {
 	public app: express.Application;
