@@ -1,9 +1,7 @@
 import { Monitor } from "../models/monitor";
-import KurentoService from "../services/kurento.service";
 import { NextFunction, Request, Response } from "express";
 import { Socket } from "socket.io";
 import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, SocketDataRelease } from "../interfaces/socketio.interface";
-import { ServerManager } from "kurento-client";
 import _ from "lodash";
 
 
