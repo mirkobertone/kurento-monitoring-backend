@@ -1,8 +1,6 @@
 import { Server } from "socket.io";
 import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData, SocketDataRelease } from "../interfaces/socketio.interface";
-import { Monitor } from "../models/monitor";
 import MonitorController from "./monitor.controller";
-import KurentoService from "../services/kurento.service";
 import _ from "lodash";
 
 class IOController {

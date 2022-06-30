@@ -14,7 +14,7 @@ class App {
 	constructor(routes: Route[]) {
 		this.app = express();
 		this.server = http.createServer(this.app);
-		this.port = process.env.PORT || 3000;
+		this.port = process.env.PORT || 3333;
 		this.env = process.env.NODE_ENV === "production" ? true : false;
 		process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
